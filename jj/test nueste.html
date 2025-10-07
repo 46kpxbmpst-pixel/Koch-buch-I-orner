@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Familienkochbuch</title>
+  <meta name="description" content="Ein modernes, einseitiges Familienkochbuch als reine HTML-Datei – mit Suche, Filtern und Druckansicht." />
+  <style>
+    :root{
+      --bg: #0b0d10;
+      --panel: #12161b;
+      --muted: #8a96a3;
+      --text: #e7edf2;
+      --accent: #5dd0b3;
+      --accent-2: #8ea9ff;
+      --border: #26313b;
+      --shadow: 0 10px 30px rgba(0,0,0,.25);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --gap: 14px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    html,body{height:100%}
+    body{
+      margin:0; background: radial-gradient(1200px 800px at 90% -10%, rgba(93,208,179,.08), transparent),radial-gradient(1000px 700px at -10% -10%, rgba(142,169,255,.08), transparent), var(--bg);
+      color:var(--text); font-family:var(--font); line-height:1.5;
+    }
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+
+    header{
+      position:sticky; top:0; z-index:5; backdrop-filter:saturate(1.2) blur(8px);
+      background:linear-gradient(to bottom, rgba(11,13,16,.85), rgba(11,13,16,.55));
+      border-bottom:1px solid var(--border);
+    }
+    .head{display:flex; gap:16px; align-items:center; justify-content:space-between;}
+    .brand{display:flex; gap:10px; align-items:center}
+    .logo{
+      width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: var(--shadow); display:grid; place-items:center; font-weight:800; color:#0b0d10;
+    }
+    h1{font-size:clamp(18px, 3.5vw, 28px); margin:0; letter-spacing:.3px}
+    .muted{color:var(--muted)}
+
+    .controls{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .search{position:relative; flex:1; min-width:240px}
+    .search input{
+      width:100%; padding:12px 40px 12px 40px; border-radius:999px; border:1px solid var(--border);
+      background:linear-gradient(180deg,#141a21,#11161b); color:var(--text); outline:none;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.03), var(--shadow);
+    }
+    .search svg{position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:.7}
+    .clear-btn{
+      position:absolute; right:8px; top:50%; transform:translateY(-50%);
+      background:transparent; border:0; color:var(--muted); cursor:pointer; padding:6px; border-radius:8px;
+    }
+    .clear-btn:hover{background:#1a222b}
+
+    .filters{display:flex; gap:8px; flex-wrap:wrap}
+    .chip{border:1px solid var(--border); padding:6px 10px; border-radius:999px; cursor:pointer; user-select:none; font-size:14px; background:#121821}
+    .chip.active{ background: linear-gradient(135deg, rgba(93,208,179,.18), rgba(142,169,255,.18)); border-color: transparent }
+
+    main{padding-top:18px}
+    .grid{display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:16px}
+
+    .card{
+      background:linear-gradient(180deg,#141a1f,#0f1318); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow: var(--shadow);
+      display:flex; flex-direction:column; min-height:200px; transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .card:hover{ transform: translateY(-2px); box-shadow: 0 14px 40px rgba(0,0,0,.35) }
+
+    .thumb{aspect-ratio: 16/9; width:100%; object-fit:cover; background:#0b0d10}
+    .card-body{padding:14px 14px 16px}
+    .title{font-weight:700; margin:0 0 6px 0; font-size:18px}
+    .meta{font-size:13px; color:var(--muted); display:flex; gap:8px; flex-wrap:wrap}
+    .tags{display:flex; gap:6px; flex-wrap:wrap; margin-top:10px}
+    .tag{font-size:12px; padding:3px 8px; border-radius:999px; border:1px dashed var(--border); color:var(--muted)}
+
+    .footerbar{display:flex; gap:8px; margin-top:12px}
+    .btn{
+      flex:1; text-align:center; padding:10px 12px; border-radius:12px; border:1px solid var(--border);
+      background:#11171d; color:var(--text); cursor:pointer; font-weight:600;
+    }
+    .btn.secondary{background:#0e1318}
+
+    /* Dialog */
+    dialog{border:1px solid var(--border); border-radius:var(--radius); background:linear-gradient(180deg,#151a21,#0e1318); color:var(--text); width:min(720px, 92vw); box-shadow: var(--shadow)}
+    dialog::backdrop{backdrop-filter: blur(2px) saturate(1.1); background:rgba(0,0,0,.35)}
+    .dialog-head{display:flex; justify-content:space-between; align-items:start; gap:10px; padding:16px 18px; border-bottom:1px solid var(--border)}
+    .dialog-body{padding:18px}
+    .close{background:transparent; border:1px solid var(--border); color:var(--muted); border-radius:10px; padding:6px 10px; cursor:pointer}
+    .ingredients,.steps{display:grid; gap:6px; margin:0; padding-left:18px}
+    .ingredients li,.steps li{margin:0 0 2px 0}
+
+    /* Druck */
+    @media print{
+      header, .footerbar { display:none !important }
+      body{ background:white; color:black }
+      .card{ break-inside: avoid }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap head">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">🍲</div>
+        <div>
+          <h1>Familienkochbuch</h1>
+          <div class="muted" style="font-size:12px">Alles in einer Datei – Suche & Filter inklusive</div>
+        </div>
+      </div>
+
+      <div class="controls" role="search">
+        <div class="search">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <input id="q" type="search" placeholder="Suchen nach Titel, Zutat oder Tag… (Strg/Cmd + K)" autocomplete="off" aria-label="Rezepte durchsuchen"/>
+          <button class="clear-btn" title="Suche löschen" aria-label="Suche löschen" id="clear">✕</button>
+        </div>
+        <div class="filters" id="filters" aria-label="Filter nach Kategorie"></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="grid" id="grid" aria-live="polite"></section>
+  </main>
+
+  <!-- Rezept-Dialog -->
+  <dialog id="dlg" aria-labelledby="dlgTitle">
+    <div class="dialog-head">
+      <h2 id="dlgTitle" style="margin:0"></h2>
+      <button class="close" id="closeDlg" aria-label="Schließen">Schließen</button>
+    </div>
+    <div class="dialog-body">
+      <img id="dlgImg" class="thumb" alt="Rezeptbild" />
+      <p class="muted" id="dlgMeta" style="margin-top:10px"></p>
+      <h3>Zutaten</h3>
+      <ul class="ingredients" id="dlgIngr"></ul>
+      <h3>Schritte</h3>
+      <ol class="steps" id="dlgSteps"></ol>
+    </div>
+  </dialog>
+
+  <script>
+  // -----------------------------------------
+  // Daten: Hier eure Familienrezepte eintragen
+  // -----------------------------------------
+  /**
+   * Struktur eines Rezepts:
+   * id: eindeutige ID (string)
+   * title: Titel
+   * servings: Portionen (z.B. "4 Portionen")
+   * time: Zeit (z.B. "30 Min")
+   * tags: ["Vegetarisch","Schnell",...]
+   * ingredients: ["200 g ...", ...]
+   * steps: ["So geht's ...", ...]
+   * image: Data-URL oder externer Link (optional)
+   */
+  const RECIPES = [
+    {
+      id: "oma-bolo",
+      title: "Omas Spaghetti Bolognese",
+      servings: "4 Portionen",
+      time: "50 Min",
+      tags: ["Klassiker","Rind","Pasta"],
+      ingredients: [
+        "500 g Rinderhack",
+        "1 Zwiebel, fein gewürfelt",
+        "1 Möhre, fein gewürfelt",
+        "1 Stange Sellerie, fein gewürfelt",
+        "2 EL Tomatenmark",
+        "800 g stückige Tomaten",
+        "1 TL Zucker, Salz, Pfeffer",
+        "Olivenöl"
+      ],
+      steps: [
+        "Zwiebel, Möhre, Sellerie in Olivenöl anschwitzen.",
+        "Hackfleisch krümelig braten.",
+        "Tomatenmark kurz rösten, Tomaten zugeben und 30 Min köcheln.",
+        "Mit Salz, Pfeffer, Zucker abschmecken. Mit Pasta servieren."
+      ],
+      image: "data:image/svg+xml;utf8,\
+        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 675'>\
+          <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%235dd0b3'/><stop offset='1' stop-color='%238ea9ff'/></linearGradient></defs>\
+          <rect width='1200' height='675' fill='%2313161c'/>\
+          <g fill='url(%23g)' font-family='Arial Black' font-size='92' font-weight='700'>\
+            <text x='60' y='180'>Omas Bolo</text>\
+            <text x='60' y='310'>Familienkochbuch</text>\
+          </g>\
+        </svg>"
+    },
+    {
+      id: "lachs-blech",
+      title: "Zitronen-Lachs vom Blech",
+      servings: "3–4 Portionen",
+      time: "25 Min",
+      tags: ["Fisch","Schnell","Ofen"],
+      ingredients: [
+        "600 g Lachsfilet",
+        "500 g kleine Kartoffeln, halbiert",
+        "1 Zitrone, in Scheiben",
+        "Olivenöl, Salz, Pfeffer, Dill"
+      ],
+      steps: [
+        "Backofen auf 200°C Umluft vorheizen.",
+        "Kartoffeln mit Öl, Salz, Pfeffer auf Blech 15 Min vorbacken.",
+        "Lachs und Zitronenscheiben dazu, 8–10 Min garen. Mit Dill bestreuen."
+      ],
+      image: "data:image/svg+xml;utf8,\
+        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 675'>\
+          <rect width='1200' height='675' fill='%2313161c'/>\
+          <circle cx='950' cy='120' r='180' fill='%238ea9ff' opacity='.2'/>\
+          <circle cx='260' cy='520' r='220' fill='%235dd0b3' opacity='.18'/>\
+          <g fill='%23e7edf2' font-family='Arial Black' font-size='86' font-weight='700'>\
+            <text x='60' y='200'>Zitronen-Lachs</text>\
+            <text x='60' y='310'>vom Blech</text>\
+          </g>\
+        </svg>"
+    },
+    {
+      id: "pancakes",
+      title: "Sonntags-Pancakes",
+      servings: "4 Portionen",
+      time: "20 Min",
+      tags: ["Süß","Frühstück","Vegetarisch"],
+      ingredients: [
+        "250 g Mehl",
+        "2 EL Zucker",
+        "2 TL Backpulver",
+        "1 Prise Salz",
+        "300 ml Milch",
+        "1 Ei",
+        "2 EL Butter, geschmolzen"
+      ],
+      steps: [
+        "Trockene Zutaten mischen, Milch, Ei, Butter unterrühren.",
+        "In Portionen in der Pfanne goldbraun ausbacken.",
+        "Mit Ahornsirup und Beeren servieren."
+      ],
+      image: "data:image/svg+xml;utf8,\
+        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 675'>\
+          <rect width='1200' height='675' fill='%2313161c'/>\
+          <g fill='%23e7edf2' font-family='Arial Black' font-size='90' font-weight='700'>\
+            <text x='60' y='240'>Pancakes</text>\
+            <text x='60' y='330'>Sonntag</text>\
+          </g>\
+        </svg>"
+    }
+  ];
+
+  // Alle bekannten Tags aus den Rezepten sammeln
+  const ALL_TAGS = Array.from(new Set(RECIPES.flatMap(r => r.tags))).sort();
+
+  // -----------------------------------------
+  // UI Logik
+  // -----------------------------------------
+  const elGrid = document.getElementById('grid');
+  const elFilters = document.getElementById('filters');
+  const elSearch = document.getElementById('q');
+  const elClear = document.getElementById('clear');
+
+  const dlg = document.getElementById('dlg');
+  const dlgTitle = document.getElementById('dlgTitle');
+  const dlgImg = document.getElementById('dlgImg');
+  const dlgMeta = document.getElementById('dlgMeta');
+  const dlgIngr = document.getElementById('dlgIngr');
+  const dlgSteps = document.getElementById('dlgSteps');
+  const closeDlg = document.getElementById('closeDlg');
+
+  let activeTags = new Set();
+
+  function renderFilters(){
+    elFilters.innerHTML = '';
+    ALL_TAGS.forEach(tag => {
+      const b = document.createElement('button');
+      b.className = 'chip' + (activeTags.has(tag) ? ' active' : '');
+      b.textContent = tag;
+      b.setAttribute('aria-pressed', activeTags.has(tag));
+      b.addEventListener('click', () => {
+        if(activeTags.has(tag)) activeTags.delete(tag); else activeTags.add(tag);
+        renderFilters();
+        renderGrid();
+      });
+      elFilters.appendChild(b);
+    });
+  }
+
+  function normalize(s){
+    return s.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'');
+  }
+
+  function recipeMatches(r, q){
+    const qn = normalize(q);
+    if(!q) return true;
+    const hay = [r.title, r.ingredients.join(' '), r.tags.join(' ')].map(normalize).join(' ');
+    return hay.includes(qn);
+  }
+
+  function tagMatches(r){
+    if(activeTags.size === 0) return true;
+    return Array.from(activeTags).every(t => r.tags.includes(t));
+  }
+
+  function renderGrid(){
+    const q = elSearch.value.trim();
+    const items = RECIPES.filter(r => recipeMatches(r,q) && tagMatches(r));
+
+    elGrid.innerHTML = '';
+    if(items.length === 0){
+      const p = document.createElement('p');
+      p.className = 'muted';
+      p.textContent = 'Keine Treffer. Tipp: Suche nach Zutaten (z.B. "Tomate") oder setze/entferne Filter.';
+      elGrid.appendChild(p);
+      return;
+    }
+
+    items.forEach(r => {
+      const card = document.createElement('article');
+      card.className = 'card';
+      card.innerHTML = `
+        <img class="thumb" src="${r.image || ''}" alt="${r.title}" loading="lazy"/>
+        <div class="card-body">
+          <h3 class="title">${r.title}</h3>
+          <div class="meta">⏱️ ${r.time} · 👨‍👩‍👧‍👦 ${r.servings}</div>
+          <div class="tags">${r.tags.map(t=>`<span class='tag'>${t}</span>`).join('')}</div>
+          <div class="footerbar">
+            <button class="btn" data-id="${r.id}" data-action="open">Details</button>
+            <button class="btn secondary" data-id="${r.id}" data-action="copy">In Zwischenablage</button>
+          </div>
+        </div>`;
+
+      card.addEventListener('click', (ev)=>{
+        const btn = ev.target.closest('button');
+        if(!btn) return;
+        const id = btn.getAttribute('data-id');
+        const action = btn.getAttribute('data-action');
+        const rec = RECIPES.find(x => x.id === id);
+        if(!rec) return;
+        if(action === 'open') openDialog(rec);
+        if(action === 'copy') copyRecipe(rec);
+      });
+
+      elGrid.appendChild(card);
+    });
+  }
+
+  function openDialog(r){
+    dlgTitle.textContent = r.title;
+    dlgImg.src = r.image || '';
+    dlgImg.style.display = r.image ? 'block' : 'none';
+    dlgMeta.textContent = `⏱️ ${r.time} · 👨‍👩‍👧‍👦 ${r.servings} · ${r.tags.join(', ')}`;
+    dlgIngr.innerHTML = r.ingredients.map(i=>`<li>${i}</li>`).join('');
+    dlgSteps.innerHTML = r.steps.map(s=>`<li>${s}</li>`).join('');
+    if(typeof dlg.showModal === 'function') dlg.showModal(); else alert('Rezept: '+r.title+'\n\nZutaten:\n- '+r.ingredients.join('\n- ')+'\n\nSchritte:\n- '+r.steps.join('\n- '));
+  }
+
+  function copyRecipe(r){
+    const text = `${r.title}\n${r.servings} · ${r.time}\nTags: ${r.tags.join(', ')}\n\nZutaten:\n- ${r.ingredients.join('\n- ')}\n\nSchritte:\n- ${r.steps.join('\n- ')}`;
+    navigator.clipboard?.writeText(text).then(()=>{
+      toast('Rezept kopiert ✓');
+    }).catch(()=>{
+      toast('Kopieren fehlgeschlagen');
+    });
+  }
+
+  function toast(msg){
+    const t = document.createElement('div');
+    t.textContent = msg;
+    Object.assign(t.style,{
+      position:'fixed', bottom:'20px', left:'50%', transform:'translateX(-50%)',
+      padding:'10px 14px', background:'#0e141a', color:'var(--text)', border:'1px solid var(--border)',
+      borderRadius:'12px', boxShadow:'var(--shadow)', zIndex:999
+    });
+    document.body.appendChild(t);
+    setTimeout(()=> t.remove(), 1600);
+  }
+
+  // Suche steuern
+  elSearch.addEventListener('input', renderGrid);
+  elClear.addEventListener('click', ()=>{ elSearch.value=''; elSearch.focus(); renderGrid(); });
+  window.addEventListener('keydown', (e)=>{
+    if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); elSearch.focus(); }
+  });
+
+  // Dialog schließen
+  closeDlg.addEventListener('click', ()=> dlg.close());
+  dlg.addEventListener('click', (e)=>{ if(e.target === dlg) dlg.close(); });
+
+  // Initial render
+  renderFilters();
+  renderGrid();
+
+  // -----------------------------------------
+  // Export/Import (optional):
+  // Speichere/lese Rezepte in LocalStorage –
+  // auskommentiert bereit für spätere Nutzung.
+  // -----------------------------------------
+  /*
+  localStorage.setItem('kochbuch.recipes', JSON.stringify(RECIPES));
+  const saved = localStorage.getItem('kochbuch.recipes');
+  const data = saved ? JSON.parse(saved) : RECIPES;
+  */
+  </script>
+</body>
+</html>
