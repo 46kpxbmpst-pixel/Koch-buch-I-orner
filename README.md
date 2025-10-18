@@ -1,408 +1,524 @@
 <!doctype html>
-<html lang="de">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Familienkochbuch</title>
-  <meta name="description" content="Ein modernes, einseitiges Familienkochbuch als reine HTML-Datei – mit Suche, Filtern und Druckansicht." />
-  <style>
-    :root{
-      --bg: #0b0d10;
-      --panel: #12161b;
-      --muted: #8a96a3;
-      --text: #e7edf2;
-      --accent: #5dd0b3;
-      --accent-2: #8ea9ff;
-      --border: #26313b;
-      --shadow: 0 10px 30px rgba(0,0,0,.25);
-      --radius: 16px;
-      --radius-sm: 10px;
-      --gap: 14px;
-      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-    }
-    html,body{height:100%}
-    body{
-      margin:0; background: radial-gradient(1200px 800px at 90% -10%, rgba(93,208,179,.08), transparent),radial-gradient(1000px 700px at -10% -10%, rgba(142,169,255,.08), transparent), var(--bg);
-      color:var(--text); font-family:var(--font); line-height:1.5;
-    }
-    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+<html lang="de"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Einfache Rezept-Sammlung (Baked)</title>
+<style>
+  :root{
+    --bg:#f7f7f8;
+    --panel:#ffffff;
+    --text:#111827;
+    --muted:#6b7280;
+    --border:#e5e7eb;
+    --accent:#2563eb;
+    --radius:12px;
+  }
 
-    header{
-      position:sticky; top:0; z-index:5; backdrop-filter:saturate(1.2) blur(8px);
-      background:linear-gradient(to bottom, rgba(11,13,16,.85), rgba(11,13,16,.55));
-      border-bottom:1px solid var(--border);
-    }
-    .head{display:flex; gap:16px; align-items:center; justify-content:space-between;}
-    .brand{display:flex; gap:10px; align-items:center}
-    .logo{
-      width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg, var(--accent), var(--accent-2));
-      box-shadow: var(--shadow); display:grid; place-items:center; font-weight:800; color:#0b0d10;
-    }
-    h1{font-size:clamp(18px, 3.5vw, 28px); margin:0; letter-spacing:.3px}
-    .muted{color:var(--muted)}
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+  }
 
-    .controls{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-    .search{position:relative; flex:1; min-width:240px}
-    .search input{
-      width:100%; padding:12px 40px 12px 40px; border-radius:999px; border:1px solid var(--border);
-      background:linear-gradient(180deg,#141a21,#11161b); color:var(--text); outline:none;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.03), var(--shadow);
-    }
-    .search svg{position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:.7}
-    .clear-btn{
-      position:absolute; right:8px; top:50%; transform:translateY(-50%);
-      background:transparent; border:0; color:var(--muted); cursor:pointer; padding:6px; border-radius:8px;
-    }
-    .clear-btn:hover{background:#1a222b}
+  .wrap{ max-width:900px; margin:auto; padding:20px 16px 28px; display:grid; gap:14px }
 
-    .filters{display:flex; gap:8px; flex-wrap:wrap}
-    .chip{border:1px solid var(--border); padding:6px 10px; border-radius:999px; cursor:pointer; user-select:none; font-size:14px; background:#121821}
-    .chip.active{ background: linear-gradient(135deg, rgba(93,208,179,.18), rgba(142,169,255,.18)); border-color: transparent }
+  .top{ position:sticky; top:0; z-index:2; background:linear-gradient(180deg,var(--bg) 85%,transparent); padding-top:4px; padding-bottom:8px }
+  #q{ width:100%; padding:12px 14px; border-radius:var(--radius); border:1px solid var(--border); background:#fff; color:var(--text) }
+  #q::placeholder{color:#9ca3af}
+  #q:focus{ outline:2px solid var(--accent); outline-offset:2px }
 
-    main{padding-top:18px}
-    .grid{display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:16px}
+  /* Kategorie-Leiste */
+  .catbar{
+    display:flex; gap:8px; flex-wrap:wrap; margin-top:8px
+  }
+  .catbtn{
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--muted);
+    border-radius:999px;
+    padding:6px 10px;
+    font-weight:600;
+    cursor:pointer;
+    transition: box-shadow .15s ease, border-color .12s ease, background .12s ease, color .12s ease;
+    user-select:none;
+  }
+  .catbtn:hover{ box-shadow:0 4px 10px rgba(15,23,42,.08) }
+  .catbtn.selected{
+    background:var(--accent);
+    color:#fff;
+    border-color:transparent;
+  }
 
-    .card{
-      background:linear-gradient(180deg,#141a1f,#0f1318); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow: var(--shadow);
-      display:flex; flex-direction:column; min-height:200px; transition: transform .18s ease, box-shadow .18s ease;
-    }
-    .card:hover{ transform: translateY(-2px); box-shadow: 0 14px 40px rgba(0,0,0,.35) }
+  .list{ display:grid; gap:10px; margin-top:4px }
+  .item{
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    background:var(--panel);
+    overflow:hidden;
+    transition: border-color .12s ease, box-shadow .15s ease;
+  }
+  .item:hover{
+    border-color:#d1d5db;
+    box-shadow:0 6px 14px rgba(15,23,42,.08);
+  }
 
-    .thumb{aspect-ratio: 16/9; width:100%; object-fit:cover; background:#0b0d10}
-    .card-body{padding:14px 14px 16px}
-    .title{font-weight:700; margin:0 0 6px 0; font-size:18px}
-    .meta{font-size:13px; color:var(--muted); display:flex; gap:8px; flex-wrap:wrap}
-    .tags{display:flex; gap:6px; flex-wrap:wrap; margin-top:10px}
-    .tag{font-size:12px; padding:3px 8px; border-radius:999px; border:1px dashed var(--border); color:var(--muted)}
+  .title{
+    width:100%; text-align:left; padding:12px 14px; cursor:pointer; background:transparent; color:var(--text); border:0; display:flex; gap:12px; align-items:center; justify-content:space-between; font-weight:600
+  }
+  .title:focus{ outline:2px solid var(--accent); outline-offset:2px; border-radius:calc(var(--radius) - 2px) }
 
-    .footerbar{display:flex; gap:8px; margin-top:12px}
-    .btn{
-      flex:1; text-align:center; padding:10px 12px; border-radius:12px; border:1px solid var(--border);
-      background:#11171d; color:var(--text); cursor:pointer; font-weight:600;
-    }
-    .btn.secondary{background:#0e1318}
+  .left{ display:flex; gap:10px; align-items:center }
+  .chev{ color:#9ca3af; transition:transform .15s ease, color .12s ease; font-size:12px }
+  .item.open .chev{ transform:rotate(90deg); color:#6b7280 }
 
-    /* Dialog */
-    dialog{border:1px solid var(--border); border-radius:var(--radius); background:linear-gradient(180deg,#151a21,#0e1318); color:var(--text); width:min(720px, 92vw); box-shadow: var(--shadow)}
-    dialog::backdrop{backdrop-filter: blur(2px) saturate(1.1); background:rgba(0,0,0,.35)}
-    .dialog-head{display:flex; justify-content:space-between; align-items:start; gap:10px; padding:16px 18px; border-bottom:1px solid var(--border)}
-    .dialog-body{padding:18px}
-    .close{background:transparent; border:1px solid var(--border); color:var(--muted); border-radius:10px; padding:6px 10px; cursor:pointer}
-    .ingredients,.steps{display:grid; gap:6px; margin:0; padding-left:18px}
-    .ingredients li,.steps li{margin:0 0 2px 0}
+  .pill{ font-size:12px; padding:4px 8px; border:1px solid var(--border); border-radius:999px; color:var(--muted); background:#f3f4f6; white-space:nowrap }
 
-    /* Druck */
-    @media print{
-      header, .footerbar { display:none !important }
-      body{ background:white; color:black }
-      .card{ break-inside: avoid }
-    }
-  </style>
+  .content{ display:none; padding:12px 14px 14px; border-top:1px solid var(--border); white-space:pre-wrap; background:#fff }
+  .item.open .content{ display:block }
+
+  .empty{ color:var(--muted); text-align:center; padding:20px 12px }
+  .empty .pill{ margin:4px }
+
+  .new{ display:grid; gap:10px; border:1px dashed var(--border); border-radius:var(--radius); padding:12px; margin-top:6px; background:#fff }
+  #newSection{ display:none }
+  .new input,.new textarea{ width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:#fff; color:var(--text) }
+  .new textarea{ min-height:110px; resize:vertical }
+
+  .btn{ padding:9px 11px; border:1px solid var(--border); background:#ffffff; color:#111827; border-radius:10px; cursor:pointer; font-weight:600; transition: box-shadow .15s ease }
+  .btn:hover{ box-shadow:0 4px 10px rgba(15,23,42,.08) }
+
+  #toggleNewBtn{ margin-top:6px; text-align:center; background:var(--accent); color:#fff; border:none; border-radius:12px; font-weight:700; padding:11px 16px; cursor:pointer; transition: box-shadow .15s ease }
+  #toggleNewBtn:hover{ box-shadow:0 8px 20px rgba(37,99,235,.3) }
+
+  @media (max-width:520px){ .wrap{padding:16px 12px} }
+
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f1220; --panel:#0f172a; --text:#e5e7eb; --muted:#a1a1aa; --border:#1f273a; --accent:#3b82f6; }
+    #q, .new, .content{ background:var(--panel) }
+    .pill{ background:#111827; border-color:#1f273a }
+    .btn{ background:#0f172a; color:var(--text) }
+    .btn:hover{ box-shadow:0 6px 14px rgba(0,0,0,.35) }
+    .catbtn{ background:#0f172a; color:#a1a1aa }
+    .catbtn.selected{ background:var(--accent); color:#fff; border-color:transparent }
+  }
+</style>
 </head>
 <body>
-  <header>
-    <div class="wrap head">
-      <div class="brand">
-        <div class="logo" aria-hidden="true">🍲</div>
-        <div>
-          <h1>Familienkochbuch</h1>
-          <div class="muted" style="font-size:12px">Alles in einer Datei – Suche & Filter inklusive</div>
-        </div>
+  <div class="wrap">
+    <div class="top">
+      <input id="q" list="suggest" placeholder="Suche in Rezeptnamen, Texten &amp; Kategorien …" autocomplete="off" aria-label="Suche">
+      <datalist id="suggest"><option value="🌶️ Chili con Carne"></option><option value="🍇 Stachelbeertorte (nach Oma Wüst)"></option><option value="🍎 Gedeckte Apfeltorte"></option><option value="🍒 Johannisbeerkuchen"></option><option value="🍝 Bandnudeln mit Spinat-Sahne"></option><option value="🍫 Marmorkuchen"></option><option value="🍮 Käsekuchen Opa"></option><option value="🍰 Buttermilchschnitten"></option><option value="🍰 Streuselkuchen"></option><option value="🥒 Römische Zucchini"></option><option value="🥕 Kohlrabi in Kresse-Creme"></option><option value="🥣 Hackfleisch-Sauerkrautsuppe"></option><option value="🥦 Grüne Bohnen mit Knoblauch"></option><option value="🥪 Partybrötchen"></option><option value="Beilage"></option><option value="Hauptgericht"></option><option value="Kuchen und Torten"></option><option value="Snack"></option><option value="Suppe"></option></datalist>
+
+      <!-- Kategorie-Leiste -->
+      <div id="cats" class="catbar" aria-label="Kategorien"><button class="catbtn " data-cat="">Alle</button><button class="catbtn " data-cat="Beilage">Beilage</button><button class="catbtn " data-cat="Hauptgericht">Hauptgericht</button><button class="catbtn " data-cat="Kuchen und Torten">Kuchen und Torten</button><button class="catbtn " data-cat="Snack">Snack</button><button class="catbtn " data-cat="Suppe">Suppe</button></div>
+    </div>
+
+    <div class="list" id="list"><div class="empty">Bitte eine Kategorie auswählen (oder Suchbegriff eingeben).</div></div>
+
+    <button id="toggleNewBtn">+ Neues Rezept hinzufügen</button>
+
+    <section class="new" id="newSection" aria-labelledby="newTitle">
+      <strong id="newTitle">Neues Rezept</strong>
+      <input id="newT" placeholder="Rezeptname (Titel)">
+      <input id="newCat" list="catList" placeholder="Kategorie (z. B. Hauptgericht)">
+      <datalist id="catList">
+        <option>Hauptgericht</option>
+        <option>Vorspeise</option>
+        <option>Dessert</option>
+        <option>Beilage</option>
+        <option>Frühstück</option>
+        <option>Snack</option>
+        <option>Suppe</option>
+        <option>Salat</option>
+        <option>Kuchen und Torten</option>
+      </datalist>
+      <textarea id="newC" placeholder="Zutaten und Zubereitung …"></textarea>
+      <div style="display:flex; gap:8px; justify-content:flex-end">
+        <button id="addBtn" class="btn">Hinzufügen</button>
       </div>
 
-      <div class="controls" role="search">
-        <div class="search">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
-          </svg>
-          <input id="q" type="search" placeholder="Suchen nach Titel, Zutat oder Tag… (Strg/Cmd + K)" autocomplete="off" aria-label="Rezepte durchsuchen"/>
-          <button class="clear-btn" title="Suche löschen" aria-label="Suche löschen" id="clear">✕</button>
-        </div>
-        <div class="filters" id="filters" aria-label="Filter nach Kategorie"></div>
+      <!-- Utility-Buttons -->
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px">
+        <button id="importBtn" class="btn" title="JSON-Datei auswählen &amp; mergen">Rezepte importieren (JSON)</button>
+        <input id="importFile" type="file" accept="application/json,.json" style="display:none">
+        <button id="exportBtn" class="btn" title="Aktuellen Stand als JSON herunterladen">Rezepte exportieren (JSON)</button>
+        <button id="resetBtn" class="btn" title="Lokalen Speicher löschen &amp; eingebetteten Stand laden">Auf EMBEDDED zurücksetzen</button>
+        <button id="bakeBtn" class="btn" title="Erzeugt eine neue HTML-Datei mit eingebetteten Rezepten">Baked-HTML herunterladen</button>
       </div>
-    </div>
-  </header>
+    </section>
+  </div>
 
-  <main class="wrap">
-    <section class="grid" id="grid" aria-live="polite"></section>
-  </main>
+<script>
+(function(){
+  const KEY = 'simpleRecipes.baked.v3';
+  const $ = id => document.getElementById(id);
 
-  <!-- Rezept-Dialog -->
-  <dialog id="dlg" aria-labelledby="dlgTitle">
-    <div class="dialog-head">
-      <h2 id="dlgTitle" style="margin:0"></h2>
-      <button class="close" id="closeDlg" aria-label="Schließen">Schließen</button>
-    </div>
-    <div class="dialog-body">
-      <img id="dlgImg" class="thumb" alt="Rezeptbild" />
-      <p class="muted" id="dlgMeta" style="margin-top:10px"></p>
-      <h3>Zutaten</h3>
-      <ul class="ingredients" id="dlgIngr"></ul>
-      <h3>Schritte</h3>
-      <ol class="steps" id="dlgSteps"></ol>
-    </div>
-  </dialog>
+  let notes = migrate(load());
 
-  <script>
-  // -----------------------------------------
-  // Daten: Hier eure Familienrezepte eintragen
-  // -----------------------------------------
-  /**
-   * Struktur eines Rezepts:
-   * id: eindeutige ID (string)
-   * title: Titel
-   * servings: Portionen (z.B. "4 Portionen")
-   * time: Zeit (z.B. "30 Min")
-   * tags: ["Vegetarisch","Schnell",...]
-   * ingredients: ["200 g ...", ...]
-   * steps: ["So geht's ...", ...]
-   * image: Data-URL oder externer Link (optional)
-   */
-  const RECIPES = [
-    {
-      id: "oma-bolo",
-      title: "Omas Spaghetti Bolognese",
-      servings: "4 Portionen",
-      time: "50 Min",
-      tags: ["Klassiker","Rind","Pasta"],
-      ingredients: [
-        "500 g Rinderhack",
-        "1 Zwiebel, fein gewürfelt",
-        "1 Möhre, fein gewürfelt",
-        "1 Stange Sellerie, fein gewürfelt",
-        "2 EL Tomatenmark",
-        "800 g stückige Tomaten",
-        "1 TL Zucker, Salz, Pfeffer",
-        "Olivenöl"
-      ],
-      steps: [
-        "Zwiebel, Möhre, Sellerie in Olivenöl anschwitzen.",
-        "Hackfleisch krümelig braten.",
-        "Tomatenmark kurz rösten, Tomaten zugeben und 30 Min köcheln.",
-        "Mit Salz, Pfeffer, Zucker abschmecken. Mit Pasta servieren."
-      ],
-      image: "data:image/svg+xml;utf8,\
-        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 675'>\
-          <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%235dd0b3'/><stop offset='1' stop-color='%238ea9ff'/></linearGradient></defs>\
-          <rect width='1200' height='675' fill='%2313161c'/>\
-          <g fill='url(%23g)' font-family='Arial Black' font-size='92' font-weight='700'>\
-            <text x='60' y='180'>Omas Bolo</text>\
-            <text x='60' y='310'>Familienkochbuch</text>\
-          </g>\
-        </svg>"
-    },
-    {
-      id: "lachs-blech",
-      title: "Zitronen-Lachs vom Blech",
-      servings: "3–4 Portionen",
-      time: "25 Min",
-      tags: ["Fisch","Schnell","Ofen"],
-      ingredients: [
-        "600 g Lachsfilet",
-        "500 g kleine Kartoffeln, halbiert",
-        "1 Zitrone, in Scheiben",
-        "Olivenöl, Salz, Pfeffer, Dill"
-      ],
-      steps: [
-        "Backofen auf 200°C Umluft vorheizen.",
-        "Kartoffeln mit Öl, Salz, Pfeffer auf Blech 15 Min vorbacken.",
-        "Lachs und Zitronenscheiben dazu, 8–10 Min garen. Mit Dill bestreuen."
-      ],
-      image: "data:image/svg+xml;utf8,\
-        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 675'>\
-          <rect width='1200' height='675' fill='%2313161c'/>\
-          <circle cx='950' cy='120' r='180' fill='%238ea9ff' opacity='.2'/>\
-          <circle cx='260' cy='520' r='220' fill='%235dd0b3' opacity='.18'/>\
-          <g fill='%23e7edf2' font-family='Arial Black' font-size='86' font-weight='700'>\
-            <text x='60' y='200'>Zitronen-Lachs</text>\
-            <text x='60' y='310'>vom Blech</text>\
-          </g>\
-        </svg>"
-    },
-    {
-      id: "pancakes",
-      title: "Sonntags-Pancakes",
-      servings: "4 Portionen",
-      time: "20 Min",
-      tags: ["Süß","Frühstück","Vegetarisch"],
-      ingredients: [
-        "250 g Mehl",
-        "2 EL Zucker",
-        "2 TL Backpulver",
-        "1 Prise Salz",
-        "300 ml Milch",
-        "1 Ei",
-        "2 EL Butter, geschmolzen"
-      ],
-      steps: [
-        "Trockene Zutaten mischen, Milch, Ei, Butter unterrühren.",
-        "In Portionen in der Pfanne goldbraun ausbacken.",
-        "Mit Ahornsirup und Beeren servieren."
-      ],
-      image: "data:image/svg+xml;utf8,\
-        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 675'>\
-          <rect width='1200' height='675' fill='%2313161c'/>\
-          <g fill='%23e7edf2' font-family='Arial Black' font-size='90' font-weight='700'>\
-            <text x='60' y='240'>Pancakes</text>\
-            <text x='60' y='330'>Sonntag</text>\
-          </g>\
-        </svg>"
+  // Suche + Kategorie-Status
+  let query = '';
+  // null = nichts gewählt (zeigt ohne Suchtext nichts), '' = „Alle“, sonst Kategoriename
+  let selectedCat = null;
+
+  const qEl = $('q'), listEl = $('list'), catsEl = $('cats');
+  const suggestEl = $('suggest');
+  const newT = $('newT'), newC = $('newC'), newCat = $('newCat'), addBtn = $('addBtn');
+  const toggleBtn = $('toggleNewBtn'), newSection = $('newSection');
+
+  // --- Storage & Seeds (Baked) ---
+  function load(){
+    const EMBEDDED = /*__EMBED_START__*/
+[
+  {
+    "id": "oxd8eitfcv",
+    "title": "🍰 Streuselkuchen",
+    "content": "⏱️ Zubereitungszeit\n• Aktive Zeit: ca. 30 Minuten\n• Gehzeit: ca. 30 Minuten\n• Backzeit: ca. 30 Minuten\n• Gesamt: ca. 1½ Stunden\n\n🍽️ Portionen\nFür 1 Blech\n\n🧂 Zutaten\nHefeteig:\n• 1 Würfel Hefe\n• 500 g Mehl\n• ¼ l Milch\n• 125 g Margarine\n• 125 g Zucker\n• 1 Prise Salz\n• 1 Ei\nStreusel:\n• 200 g Mehl\n• 200 g Zucker\n• 100 g Mondamin (oder Mehl)\n• 200 g Butter\n• 1 Prise Salz, 1 Prise Zimt\n\n👩‍🍳 Zubereitung\n\t1. Mehl in Schüssel geben, Vertiefung formen. Hefe in Milch mit Zucker auflösen, hineingeben, 15 Minuten gehen lassen.\n\t2. Restliche Zutaten einarbeiten, 15 Minuten gehen lassen.\n\t3. Streuselzutaten verkneten.\n\t4. Teig auf Blech ausrollen, ggf. mit Obst belegen, Streusel darüber.\n\t5. Bei 180 °C ca. 30 Minuten backen.\n",
+    "cat": "Kuchen und Torten",
+    "updated": 1760177791083
+  },
+  {
+    "id": "585k8ql9w2n",
+    "title": "🍇 Stachelbeertorte (nach Oma Wüst)",
+    "content": "⏱️ Zubereitungszeit\n• Aktive Zeit: ca. 45 Minuten\n• Backzeit: ca. 30 Minuten\n• Kühlzeit: ca. 1 Stunde\n• Gesamt: ca. 2 Stunden 15 Minuten\n\n🍽️ Portionen\nFür 1 Torte (26 cm Ø)\n\n🧂 Zutaten\nBoden:\n• 100 g Butter\n• 100 g Zucker\n• 1 Päckchen Vanillezucker\n• 4 Eigelb\n• 1 TL Backpulver\n• 125 g Mehl\nDeckel:\n• 4 Eiweiß\n• 150 g Zucker\n• 100 g gehobelte Mandeln\nFüllung:\n• 330 g Stachelbeeren (Glas)\n• 1 Tortenguss klar\n• 500 ml Sahne\n• 2 Päckchen Vanillezucker\n• 2 Päckchen Sahnesteif\n\n👩‍🍳 Zubereitung\n\t1. Butter, Zucker, Vanillezucker cremig rühren, Eigelb zugeben, Mehl und Backpulver einarbeiten.\n\t2. Auf 2 Formen verteilen.\n\t3. Eiweiß mit Zucker steif schlagen, aufstreichen, Mandeln daraufgeben.\n\t4. Bei 175 °C ca. 30 Minuten backen.\n\t5. Einen Boden mit Stachelbeeren und Tortenguss belegen, Sahne aufschlagen und daraufgeben.\nZweiten Boden in Stücke schneiden und als Deckel auflegen.",
+    "cat": "Kuchen und Torten",
+    "updated": 1760177691834
+  },
+  {
+    "id": "xlgziq267u",
+    "title": "🍫 Marmorkuchen",
+    "content": "⏱️ Zubereitungszeit\n• Aktive Zeit: ca. 20 Minuten\n• Backzeit: ca. 60 Minuten\n• Gesamt: ca. 1 Stunde 20 Minuten\n\n🍽️ Portionen\nFür 1 Gugelhupfform\n\n🧂 Zutaten\n• 250 g Butter\n• 250 g Zucker\n• 4 Eier\n• 350 g Mehl\n• 1 Päckchen Backpulver\n• 1 Päckchen Vanillezucker\n• 1 EL Rum\n• 250 ml Milch\n• 3 EL Kakao\n• Puderzucker\n\n👩‍🍳 Zubereitung\n\t1. Butter, Zucker, Vanillezucker und Rum schaumig rühren.\n\t2. Eier einzeln zugeben, Mehl und Backpulver mit Milch abwechselnd einrühren.\n\t3. Teig halbieren, eine Hälfte mit Kakao mischen.\n\t4. Hellen und dunklen Teig abwechselnd in Form geben, marmorieren.\n\t5. Bei 175 °C ca. 60 Minuten backen, abkühlen lassen, mit Puderzucker bestreuen.\n",
+    "cat": "Kuchen und Torten",
+    "updated": 1760177635129
+  },
+  {
+    "id": "rn2ef1m5zg",
+    "title": "🍒 Johannisbeerkuchen",
+    "content": "⏱️ Zubereitungszeit\n• Aktive Zeit: ca. 25 Minuten\n• Backzeit: ca. 30 Minuten\n• Gesamt: ca. 55 Minuten\n\n🍽️ Portionen\nFür 1 Torte\n\n🧂 Zutaten\nBoden:\n• 4 Eier\n• 125 g Zucker\n• 180 g Mehl\n• 9 EL Öl\n• ½ Päckchen Backpulver\nBelag:\n• Johannisbeeren nach Belieben\n• 2 Becher Crème fraîche\n• 1 Päckchen Vanillezucker\n• 2 Beutel Sahnesteif\n• 60 g Puderzucker\n\n👩‍🍳 Zubereitung\n\t1. Teigzutaten verrühren, in gefettete Form geben.\n\t2. Bei 175 °C ca. 30 Minuten backen, abkühlen lassen.\n\t3. Crème fraîche mit Vanillezucker, Sahnesteif, Puderzucker verrühren.\nJohannisbeeren unterheben und auf dem Boden verteilen.",
+    "cat": "Kuchen und Torten",
+    "updated": 1760177583660
+  },
+  {
+    "id": "5zrfmr03cbx",
+    "title": "🍮 Käsekuchen Opa",
+    "content": "⏱️ Zubereitungszeit\n• Aktive Zeit: ca. 25 Minuten\n• Kühlzeit: ca. 1 Stunde\n• Backzeit: ca. 50–60 Minuten\n• Gesamt: ca. 2½ Stunden\n\n🍽️ Portionen\nFür eine Springform (26 cm Ø)\n\n🧂 Zutaten\nTeig:\n• 250 g Mehl\n• 125 g Butter\n• 30 g Zucker\n• 1 Eigelb\n• 1 Messerspitze Salz\n• 2 EL Wasser\nFüllung:\n• 750 g Quark (halb Mager-, halb Vollfettquark)\n• ½ Tasse Öl\n• 300 g Zucker\n• 3 Eigelb\n• 40 g Speisestärke\n• 1 Päckchen Vanillezucker\n• ⅛ l Milch\n• 3–4 Eiweiß\n\n👩‍🍳 Zubereitung\n\t1. Teigzutaten verkneten, 1 Stunde kalt stellen.\n\t2. Quarkmasse anrühren, Eiweiß steif schlagen und unterheben.\n\t3. Teig ausrollen, Form auskleiden, Füllung einfüllen.\n\t4. Bei 180 °C ca. 50–60 Minuten backen.\nIm ausgeschalteten Ofen abkühlen lassen.",
+    "cat": "Kuchen und Torten",
+    "updated": 1760177544114
+  },
+  {
+    "id": "flo46e68pws",
+    "title": "🍰 Buttermilchschnitten",
+    "content": "⏱️ Zubereitungszeit\n• Aktive Zeit: ca. 20 Minuten\n• Backzeit: ca. 20 Minuten\n• Gesamt: ca. 40 Minuten\n\n🍽️ Portionen\nFür 1 Blech\n\n🧂 Zutaten\nTeig:\n• 3 Eier\n• 3 Tassen Zucker (nach Geschmack reduzieren)\n• 1 Päckchen Vanillezucker\n• 4 Tassen Mehl\n• 1 Päckchen Backpulver\n• 2 Tassen Buttermilch\nBelag:\n• 2 Tassen Kokosflocken\n• ½ Tasse Zucker\nGuss:\n• 200 g Sahne\n• 150 g Butter\n\n👩‍🍳 Zubereitung\n\t1. Eier, Zucker, Vanillezucker verrühren. Mehl, Backpulver, Buttermilch zugeben.\n\t2. Auf Blech geben, mit Kokos-Zucker-Mischung bestreuen.\n\t3. Bei 180 °C ca. 20 Minuten backen.\nGuss aus Sahne und Butter kochen und über den heißen Kuchen gießen.",
+    "cat": "Kuchen und Torten",
+    "updated": 1760177489675
+  },
+  {
+    "id": "hv1wk5872oj",
+    "title": "🍎 Gedeckte Apfeltorte",
+    "content": "⏱️ Zubereitungszeit\n• Aktive Zeit: ca. 25 Minuten\n• Backzeit: ca. 70 Minuten\n• Gesamt: ca. 1 Stunde 35 Minuten\n\n🍽️ Portionen\nFür eine Springform (26 cm Ø)\n\n🧂 Zutaten\nTeig:\n• 150 g Margarine\n• 150 g Zucker\n• 1 Ei\n• 2 TL Backpulver\n• 1 Päckchen Vanillezucker\n• 300 g Mehl\nFüllung:\n• ca. 1 kg Äpfel\n• 1 Prise Zimt\n\n👩‍🍳 Zubereitung\n\t1. Äpfel schälen, entkernen, würfeln und mit Zimt mischen.\n\t2. Zutaten für den Teig verkneten.\n\t3. ⅔ Teig in Springform geben, Boden & Rand formen.\n\t4. Äpfel einfüllen, restlichen Teig ausrollen und als Deckel auflegen.\nBei 175 °C Umluft ca. 70 Minuten backen.",
+    "cat": "Kuchen und Torten",
+    "updated": 1760177446330
+  },
+  {
+    "id": "sem5kah1b7h",
+    "title": "🥪 Partybrötchen",
+    "content": "⏱️ Zubereitungszeit\n• Aktive Zeit: ca. 10 Minuten\n• Backzeit: ca. 15 Minuten\n• Gesamt: ca. 25 Minuten\n\n🍽️ Portionen\n6 Brötchenhälften\n\n🧂 Zutaten\n• 1 Packung Brötchen (6 Stück)\n• 2 Becher Schmand\n• 1 Tüte geriebener Käse\n• Belag nach Geschmack: Salami, Schinken, Pilze, Ananas, Paprika, Zwiebeln\n\n👩‍🍳 Zubereitung\n\t1. Schmand mit Käse und Zutaten mischen.\n\t2. Auf Brötchenhälften streichen.\nBei 180 °C ca. 15 Minuten goldbraun backen.",
+    "cat": "Snack",
+    "updated": 1760177371002
+  },
+  {
+    "id": "9dbh70u6afj",
+    "title": "🥕 Kohlrabi in Kresse-Creme",
+    "content": "⏱️ Zubereitungszeit\n• Aktive Zeit: ca. 20 Minuten\n• Kochzeit: ca. 10 Minuten\n• Gesamt: ca. 30 Minuten\n\n🍽️ Portionen\nFür 4 Personen\n\n🧂 Zutaten\n• 1 kg Kohlrabi (mit Herzblättern)\n• 150 g Crème fraîche\n• 3 EL Kresse\n• Salz, Pfeffer, Muskat\n• Etwas Zitronensaft\n\n👩‍🍳 Zubereitung\n\t1. Kohlrabi schälen, in Stifte schneiden. Herzblätter fein schneiden.\n\t2. In Salzwasser 8–10 Minuten garen, abgießen.\n\t3. Crème fraîche erhitzen, Kresse und Gewürze einrühren.\n\t4. Kohlrabi hinzufügen, abschmecken und servieren.\n",
+    "cat": "Beilage",
+    "updated": 1760177320203
+  },
+  {
+    "id": "enl1ev4fogb",
+    "title": "🥦 Grüne Bohnen mit Knoblauch",
+    "content": "⏱️ Zubereitungszeit\n• Aktive Zeit: ca. 10 Minuten\n• Kochzeit: ca. 20 Minuten\n• Gesamt: ca. 30 Minuten\n\n🍽️ Portionen\nFür 4 Personen\n\n🧂 Zutaten\n• 750 g grüne Bohnen\n• 150 g Crème fraîche\n• 2 Knoblauchzehen\n• 1 EL Petersilie\n• Salz und Pfeffer\n\n👩‍🍳 Zubereitung\n\t1. Bohnen abfädeln, waschen, in Stücke schneiden und 15 Minuten in Salzwasser garen.\n\t2. Crème fraîche erhitzen, Knoblauch pressen, Petersilie zufügen.\n\t3. Mit Salz und Pfeffer würzen, Bohnen untermengen und kurz erhitzen.\n",
+    "cat": "Beilage",
+    "updated": 1760177285939
+  },
+  {
+    "id": "j7nk6msqtg",
+    "title": "🥣 Hackfleisch-Sauerkrautsuppe",
+    "content": "⏱️ Zubereitungszeit\n• Aktive Zeit: ca. 20 Minuten\n• Kochzeit: ca. 60–90 Minuten\n• Gesamt: ca. 1 Stunde 30 Minuten\n\n🍽️ Portionen\nFür 4 Personen\n\n🧂 Zutaten\nFür die Suppe:\n• 2 große Zwiebeln\n• 250 g Hackfleisch\n• 2–3 Gewürzgurken\n• 3 gehäufte EL Sauerkraut\n• 3 EL Tomatenmark\n• 1 Liter Gemüse- oder Fleischbrühe\n• Salz und Pfeffer\n• Petersilie oder Schnittlauch zum Verfeinern\nFür den Dip:\n• ½ Becher saure Sahne\n• 2–3 EL Mayonnaise\n• 1–2 Knoblauchzehen\n• 1 TL Senf\n• Salz und Pfeffer\n\n👩‍🍳 Zubereitung\n\t1. Zwiebeln und Hackfleisch in einem Topf anbraten. Mit Brühe ablöschen und aufkochen.\n\t2. Gewürzgurken, Tomatenmark und Sauerkraut hinzufügen. Ca. 1–2 Stunden köcheln lassen.\n\t3. Mit Salz, Pfeffer und Kräutern abschmecken.\n\t4. Für den Dip saure Sahne, Mayonnaise, Knoblauch und Senf verrühren. Mit Salz und Pfeffer würzen und zur Suppe servieren.\n",
+    "cat": "Suppe",
+    "updated": 1760177236577
+  },
+  {
+    "id": "rfxet4dtpmq",
+    "title": "🍝 Bandnudeln mit Spinat-Sahne",
+    "content": "⏱️ Zubereitungszeit\n• Aktive Zeit: ca. 25 Minuten\n• Gesamt: ca. 30 Minuten\n\n🍽️ Portionen\nFür 3 Portionen\n\n🧂 Zutaten\n• 500 g Blattspinat (frisch oder TK)\n• 1 kleine Zwiebel\n• 1 Knoblauchzehe\n• 400 g Bandnudeln\n• 1 EL Öl\n• 1 EL Pinienkerne (optional)\n• 200 g Sahne\n• Salz und Pfeffer\n• 2 EL Parmesan\n\n👩‍🍳 Zubereitung\n\t1. Spinat putzen. Nudeln in Salzwasser kochen.\n\t2. Zwiebel und Knoblauch in Öl glasig dünsten.\n\t3. Spinat und Pinienkerne zugeben, kurz mitdünsten.\n\t4. Sahne hinzufügen, würzen und cremig einkochen.\nNudeln abgießen, unterheben, mit Parmesan servieren.",
+    "cat": "Hauptgericht",
+    "updated": 1760177196326
+  },
+  {
+    "id": "l5p05ejgrks",
+    "title": "🌶️ Chili con Carne",
+    "content": "⏱️ Zubereitungszeit\n• Aktive Zeit: ca. 20 Minuten\n• Kochzeit: ca. 40 Minuten\n• Gesamt: ca. 1 Stunde\n\n🍽️ Portionen\nFür 4 Personen\n\n🧂 Zutaten\n• 500 g Hackfleisch\n• 500 ml passierte Tomaten\n• 2 rote Paprika\n• 2 große Zwiebeln\n• 1 Dose Mais\n• 2 Dosen Kidneybohnen\n• 1 Packung Chili-Gewürzmischung\n• Salz, Pfeffer, Zucker oder Ketchup\n• Öl zum Braten\n\n👩‍🍳 Zubereitung\n\t1. Hackfleisch in Öl anbraten.\n\t2. Zwiebeln und Paprika zufügen, würzen.\n\t3. Tomaten, Bohnen und Gewürze zugeben, 30–40 Minuten köcheln lassen.\nMit Zucker oder Ketchup abschmecken, Mais kurz unterrühren.",
+    "cat": "Hauptgericht",
+    "updated": 1760177123593
+  },
+  {
+    "id": "alv69y4hz5w",
+    "title": "🥒 Römische Zucchini",
+    "content": "⏱️ Zubereitungszeit\n• Aktive Zeit: ca. 25 Minuten\n• Backzeit: ca. 25 Minuten\n• Gesamt: ca. 50 Minuten\n\n🍽️ Portionen\nFür 2–3 Personen\n\n🧂 Zutaten\n• 50 g Speckwürfel\n• 1 EL Öl\n• 1 Zwiebel\n• 1 Knoblauchzehe\n• 500 g Tomatensoße\n• 1 EL Oregano\n• Salz und Pfeffer\n• 500 g Zucchini\n• 2 EL Semmelmehl\n• 4–5 EL gehackte Kräuter (Petersilie, Oregano, Rosmarin)\n• 40 g Parmesan\n• 6 EL Sahne oder Crème fraîche\n\n👩‍🍳 Zubereitung\n\t1. Speck in Öl anbraten, Zwiebel und Knoblauch zufügen und kurz andünsten.\n\t2. Tomatensoße, Oregano, Salz und Pfeffer zugeben, einköcheln lassen, in eine Auflaufform füllen.\n\t3. Zucchini längs halbieren, leicht salzen.\n\t4. Semmelmehl, Kräuter, Parmesan und Sahne zu einer Paste verrühren und auf die Zucchini streichen.\n\t5. In der Soße bei 230 °C ca. 25 Minuten backen.\n",
+    "cat": "Hauptgericht",
+    "updated": 1760176576342
+  }
+]
+/*__EMBED_END__*/;
+
+    try{
+      const raw = localStorage.getItem(KEY);
+      if(!raw) return EMBEDDED;
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : EMBEDDED;
+    }catch(e){ console.warn(e); return EMBEDDED; }
+  }
+
+  function save(){
+    localStorage.setItem(KEY, JSON.stringify(notes));
+    refreshSuggestions();
+    buildCategoryBar();
+    render();
+  }
+
+  function mk(title, content, cat){
+    return { id: Math.random().toString(36).slice(2), title: String(title||'Ohne Titel'), content: String(content||''), cat: String(cat||'Unkategorisiert'), updated: Date.now() };
+  }
+
+  function migrate(arr){
+    return (arr||[]).map(n => ({
+      id: n.id || Math.random().toString(36).slice(2),
+      title: String(n.title||'Ohne Titel'),
+      content: String(n.content||''),
+      cat: n.cat ? String(n.cat) : 'Unkategorisiert',
+      updated: Number(n.updated || Date.now())
+    }));
+  }
+
+  // --- Vorschläge füllen (Titel + Kategorien) ---
+  function refreshSuggestions(){
+    const titleSet = new Set(notes.map(n => n.title).filter(Boolean));
+    const catSet   = new Set(notes.map(n => n.cat || 'Unkategorisiert'));
+    const options = Array.from(new Set([...titleSet, ...catSet]))
+      .sort((a,b)=>a.localeCompare(b,'de',{sensitivity:'base'}));
+    suggestEl.innerHTML = options.map(v => `<option value="${escapeAttr(v)}"></option>`).join('');
+  }
+
+  // Merge-Helfer (für Import & optionales Laden)
+  function mergeIncoming(fileArr){
+    const incoming = migrate(fileArr || []);
+    const key = r => (r.title||'').trim().toLowerCase()+'|'+(r.cat||'').trim().toLowerCase();
+    const map = new Map(notes.map(r => [key(r), r]));
+    for(const r of incoming){
+      const k = key(r);
+      if(!map.has(k)){
+        map.set(k, {...r, id: r.id || Math.random().toString(36).slice(2), updated: r.updated || Date.now()});
+      }
     }
-  ];
-
-  // Alle bekannten Tags aus den Rezepten sammeln
-  const ALL_TAGS = Array.from(new Set(RECIPES.flatMap(r => r.tags))).sort();
-
-  // -----------------------------------------
-  // UI Logik
-  // -----------------------------------------
-  const elGrid = document.getElementById('grid');
-  const elFilters = document.getElementById('filters');
-  const elSearch = document.getElementById('q');
-  const elClear = document.getElementById('clear');
-
-  const dlg = document.getElementById('dlg');
-  const dlgTitle = document.getElementById('dlgTitle');
-  const dlgImg = document.getElementById('dlgImg');
-  const dlgMeta = document.getElementById('dlgMeta');
-  const dlgIngr = document.getElementById('dlgIngr');
-  const dlgSteps = document.getElementById('dlgSteps');
-  const closeDlg = document.getElementById('closeDlg');
-
-  let activeTags = new Set();
-
-  function renderFilters(){
-    elFilters.innerHTML = '';
-    ALL_TAGS.forEach(tag => {
-      const b = document.createElement('button');
-      b.className = 'chip' + (activeTags.has(tag) ? ' active' : '');
-      b.textContent = tag;
-      b.setAttribute('aria-pressed', activeTags.has(tag));
-      b.addEventListener('click', () => {
-        if(activeTags.has(tag)) activeTags.delete(tag); else activeTags.add(tag);
-        renderFilters();
-        renderGrid();
-      });
-      elFilters.appendChild(b);
-    });
+    notes = Array.from(map.values()).sort((a,b)=>b.updated - a.updated);
+    save();
   }
 
-  function normalize(s){
-    return s.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'');
+  // --- Kategorie-Leiste ---
+  function buildCategoryBar(){
+    const cats = Array.from(new Set(notes.map(n => n.cat || 'Unkategorisiert')))
+      .sort((a,b)=>a.localeCompare(b,'de',{sensitivity:'base'}));
+    const allBtn = `<button class="catbtn ${selectedCat===''? 'selected':''}" data-cat="">Alle</button>`;
+    const catBtns = cats.map(c =>
+      `<button class="catbtn ${selectedCat===c?'selected':''}" data-cat="${escapeAttr(c)}">${escapeHtml(c)}</button>`
+    ).join('');
+    catsEl.innerHTML = allBtn + catBtns;
   }
 
-  function recipeMatches(r, q){
-    const qn = normalize(q);
-    if(!q) return true;
-    const hay = [r.title, r.ingredients.join(' '), r.tags.join(' ')].map(normalize).join(' ');
-    return hay.includes(qn);
-  }
+  catsEl.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.catbtn');
+    if(!btn) return;
+    const clicked = btn.getAttribute('data-cat'); // '' für Alle, sonst Kategoriename
+    selectedCat = (clicked === selectedCat) ? null : clicked; // erneuter Klick -> abwählen
+    buildCategoryBar();
+    render();
+  });
 
-  function tagMatches(r){
-    if(activeTags.size === 0) return true;
-    return Array.from(activeTags).every(t => r.tags.includes(t));
-  }
+  // --- Render (mit Suche-zeigt-auch-ohne-Kategorie) ---
+  function render(){
+    const q = query.trim().toLowerCase();
 
-  function renderGrid(){
-    const q = elSearch.value.trim();
-    const items = RECIPES.filter(r => recipeMatches(r,q) && tagMatches(r));
-
-    elGrid.innerHTML = '';
-    if(items.length === 0){
-      const p = document.createElement('p');
-      p.className = 'muted';
-      p.textContent = 'Keine Treffer. Tipp: Suche nach Zutaten (z.B. "Tomate") oder setze/entferne Filter.';
-      elGrid.appendChild(p);
+    // Nichts ausgewählt + keine Suche => nichts anzeigen (Hinweis)
+    if (selectedCat === null && q === '') {
+      listEl.innerHTML = `<div class="empty">Bitte eine Kategorie auswählen (oder Suchbegriff eingeben).</div>`;
       return;
     }
 
-    items.forEach(r => {
-      const card = document.createElement('article');
-      card.className = 'card';
-      card.innerHTML = `
-        <img class="thumb" src="${r.image || ''}" alt="${r.title}" loading="lazy"/>
-        <div class="card-body">
-          <h3 class="title">${r.title}</h3>
-          <div class="meta">⏱️ ${r.time} · 👨‍👩‍👧‍👦 ${r.servings}</div>
-          <div class="tags">${r.tags.map(t=>`<span class='tag'>${t}</span>`).join('')}</div>
-          <div class="footerbar">
-            <button class="btn" data-id="${r.id}" data-action="open">Details</button>
-            <button class="btn secondary" data-id="${r.id}" data-action="copy">In Zwischenablage</button>
-          </div>
-        </div>`;
-
-      card.addEventListener('click', (ev)=>{
-        const btn = ev.target.closest('button');
-        if(!btn) return;
-        const id = btn.getAttribute('data-id');
-        const action = btn.getAttribute('data-action');
-        const rec = RECIPES.find(x => x.id === id);
-        if(!rec) return;
-        if(action === 'open') openDialog(rec);
-        if(action === 'copy') copyRecipe(rec);
+    const list = notes
+      .slice()
+      .sort((a,b)=>b.updated - a.updated)
+      .filter(n => {
+        const matchesQuery = q === '' ? true : (
+          n.title.toLowerCase().includes(q) ||
+          n.content.toLowerCase().includes(q) ||
+          (n.cat||'').toLowerCase().includes(q)
+        );
+        // Kategorie aktiv? (null = keine, '' = Alle)
+        const catActive = (selectedCat !== null && selectedCat !== '');
+        const matchesCat = catActive ? (n.cat === selectedCat) : true;
+        return matchesQuery && matchesCat;
       });
 
-      elGrid.appendChild(card);
-    });
+    listEl.innerHTML = '';
+
+    if(list.length===0){
+      listEl.innerHTML = `<div class="empty">Keine Treffer.</div>`;
+      return;
+    }
+
+    for(const n of list){
+      const item = document.createElement('div');
+      item.className = 'item';
+
+      // NEU: Gesamtzeit aus dem Inhalt parsen
+      const totalTime = getTotalTime(n.content);
+
+      item.innerHTML = `
+        <button class="title" aria-expanded="false">
+          <span class="left">
+            <span class="chev">▶</span>
+            <strong>${escapeHtml(n.title||'Ohne Titel')}</strong>
+          </span>
+          <span style="display:flex; gap:8px; align-items:center">
+            ${ totalTime ? `<span class="pill" title="Gesamtzeit">⏱ ${escapeHtml(totalTime)}</span>` : '' }
+            <span class="pill" title="Kategorie">${escapeHtml(n.cat||'Unkategorisiert')}</span>
+          </span>
+        </button>
+        <div class="content">${escapeHtml(n.content).replace(/\n/g,'<br>')}</div>
+      `;
+      const btn = item.querySelector('.title');
+      btn.addEventListener('click', ()=>{
+        const open = item.classList.toggle('open');
+        btn.setAttribute('aria-expanded', String(open));
+      });
+      listEl.appendChild(item);
+    }
   }
 
-  function openDialog(r){
-    dlgTitle.textContent = r.title;
-    dlgImg.src = r.image || '';
-    dlgImg.style.display = r.image ? 'block' : 'none';
-    dlgMeta.textContent = `⏱️ ${r.time} · 👨‍👩‍👧‍👦 ${r.servings} · ${r.tags.join(', ')}`;
-    dlgIngr.innerHTML = r.ingredients.map(i=>`<li>${i}</li>`).join('');
-    dlgSteps.innerHTML = r.steps.map(s=>`<li>${s}</li>`).join('');
-    if(typeof dlg.showModal === 'function') dlg.showModal(); else alert('Rezept: '+r.title+'\n\nZutaten:\n- '+r.ingredients.join('\n- ')+'\n\nSchritte:\n- '+r.steps.join('\n- '));
+  // --- Utils ---
+  function escapeHtml(s=''){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function escapeAttr(s=''){ return String(s).replace(/"/g,'&quot;'); }
+
+  // NEU: Zeit aus "Gesamt:" oder "Gesammt:" Zeile lesen
+  function getTotalTime(text=''){
+    const m = String(text).match(/^\s*(?:Gesamt|Gesammt)\s*:\s*(.+)$/im);
+    return m ? m[1].trim() : null; // z.B. "45 Min", "1:15 h", "1 h 30 min"
   }
 
-  function copyRecipe(r){
-    const text = `${r.title}\n${r.servings} · ${r.time}\nTags: ${r.tags.join(', ')}\n\nZutaten:\n- ${r.ingredients.join('\n- ')}\n\nSchritte:\n- ${r.steps.join('\n- ')}`;
-    navigator.clipboard?.writeText(text).then(()=>{
-      toast('Rezept kopiert ✓');
-    }).catch(()=>{
-      toast('Kopieren fehlgeschlagen');
-    });
-  }
+  // --- Events ---
+  qEl.addEventListener('input', e=>{ query = e.target.value; render(); });
+  qEl.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ query = qEl.value; render(); } });
 
-  function toast(msg){
-    const t = document.createElement('div');
-    t.textContent = msg;
-    Object.assign(t.style,{
-      position:'fixed', bottom:'20px', left:'50%', transform:'translateX(-50%)',
-      padding:'10px 14px', background:'#0e141a', color:'var(--text)', border:'1px solid var(--border)',
-      borderRadius:'12px', boxShadow:'var(--shadow)', zIndex:999
-    });
-    document.body.appendChild(t);
-    setTimeout(()=> t.remove(), 1600);
-  }
+  addBtn.addEventListener('click', ()=>{
+    const t = newT.value.trim();
+    const c = newC.value;
+    const cat = (newCat.value || 'Unkategorisiert').trim();
+    if(!t && !c) return;
+    notes.unshift(mk(t, c, cat));
+    newT.value=''; newC.value=''; newCat.value='';
+    save();
 
-  // Suche steuern
-  elSearch.addEventListener('input', renderGrid);
-  elClear.addEventListener('click', ()=>{ elSearch.value=''; elSearch.focus(); renderGrid(); });
-  window.addEventListener('keydown', (e)=>{
-    if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); elSearch.focus(); }
+    if(newSection.style.display !== 'none'){
+      newSection.style.display = 'none';
+      toggleBtn.textContent = '+ Neues Rezept hinzufügen';
+    }
   });
 
-  // Dialog schließen
-  closeDlg.addEventListener('click', ()=> dlg.close());
-  dlg.addEventListener('click', (e)=>{ if(e.target === dlg) dlg.close(); });
+  toggleBtn.addEventListener('click', ()=>{
+    const isHidden = newSection.style.display === 'none' || !newSection.style.display;
+    newSection.style.display = isHidden ? 'grid' : 'none';
+    toggleBtn.textContent = isHidden ? '– Formular ausblenden' : '+ Neues Rezept hinzufügen';
+  });
 
-  // Initial render
-  renderFilters();
-  renderGrid();
+  // --- Import (Datei auswählen & mergen) ---
+  $('importBtn').addEventListener('click', ()=> $('importFile').click());
+  $('importFile').addEventListener('change', async (e)=>{
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    try{
+      const text = await file.text();
+      const json = JSON.parse(text);
+      if(!Array.isArray(json)) throw new Error('Datei ist kein Array von Rezepten.');
+      mergeIncoming(json);
+    }catch(err){
+      alert('Import fehlgeschlagen: '+err.message);
+      console.error(err);
+    }finally{
+      e.target.value = '';
+    }
+  });
 
-  // -----------------------------------------
-  // Export/Import (optional):
-  // Speichere/lese Rezepte in LocalStorage –
-  // auskommentiert bereit für spätere Nutzung.
-  // -----------------------------------------
-  /*
-  localStorage.setItem('kochbuch.recipes', JSON.stringify(RECIPES));
-  const saved = localStorage.getItem('kochbuch.recipes');
-  const data = saved ? JSON.parse(saved) : RECIPES;
-  */
-  </script>
-</body>
-</html>
+  // --- Export: aktuellen Stand als JSON herunterladen ---
+  $('exportBtn').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(notes, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'recipes.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // --- Reset: lokalen Speicher löschen & Seite neu laden (zeigt EMBEDDED) ---
+  $('resetBtn').addEventListener('click', () => {
+    localStorage.removeItem(KEY);
+    location.reload();
+  });
+
+  // --- Bake: komplette HTML mit EMBEDDED erzeugen & downloaden ---
+  $('bakeBtn').addEventListener('click', () => {
+    try{
+      let html = '<!doctype html>\n' + document.documentElement.outerHTML;
+      const embeddedJson = JSON.stringify(notes, null, 2);
+      const embedRegex =
+        /(const\s+EMBEDDED\s*=\s*\/\*__EMBED_START__\*\/)([\s\S]*?)(\/\*__EMBED_END__\*\/\s*;?)/;
+
+      if(!embedRegex.test(html)){
+        alert('EMBEDDED-Marker nicht gefunden. Bitte Funktion load() prüfen.');
+        return;
+      }
+      html = html.replace(
+        embedRegex,
+        (_, start, _old, end) => `${start}\n${embeddedJson}\n${end}`
+      );
+
+      html = html.replace(
+        /(const\s+KEY\s*=\s*['"])([^'"]*?\.baked\.v)(\d+)(['"]\s*;)/,
+        (m, p1, base, num, p4) => p1 + base + (Number(num)+1) + p4
+      );
+
+      const blob = new Blob([html], {type:'text/html'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'rezepte_baked.html';
+      a.click();
+      URL.revokeObjectURL(url);
+    }catch(err){
+      console.error(err);
+      alert('Konnte Baked-HTML nicht erzeugen. Siehe Konsole.');
+    }
+  });
+
+  // --- Start ---
+  refreshSuggestions();
+  buildCategoryBar();
+  render();
+})();
+</script>
+
+
+
+</body></html>
